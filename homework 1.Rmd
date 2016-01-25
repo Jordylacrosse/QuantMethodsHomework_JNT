@@ -1,0 +1,55 @@
+tgpp.data <- read.csv("C:/Users/Jordy/Downloads/tgpp data.csv")
+
+View(tgpp.data)
+What are the names of the columns in this dataset?
+
+names(tgpp.data)
+##  [1] "plot"      "year"      "record_id" "corner"    "scale"    
+##  [6] "richness"  "easting"   "northing"  "slope"     "ph"       
+## [11] "yrsslb"
+"plot" "year" "record_id" "corner" "scale" "richness" "easting"
+"northing" "slope" "ph" "yrsslb"
+
+How many rows and columns does this data file have? (this is stated in the top right hand corner of the data file; 4080 observations of 11 variables)
+
+rownames(tgpp.data)
+
+#4080 rows in the tgpp data
+
+#11 columns
+#(it's stated in the top right hand corner of the data file)
+What kind of object is each data column? Hint: checkout the function sapply().
+
+sapply(tgpp.data,class)
+##      plot      year record_id    corner     scale  richness   easting 
+## "integer" "integer" "integer" "integer" "numeric" "integer" "integer" 
+##  northing     slope        ph    yrsslb 
+## "integer" "integer" "numeric" "numeric"
+plot year record_id corner scale richness easting northing "integer" "integer" "integer" "integer" "numeric" "integer" "integer""integer" slope ph yrsslb "integer" "numeric" "numeric"
+
+They are either integers or numeric. Integers are all of the natural numbers in a data set, and the numeric values that have a decimal value in it (example: 6.003)
+
+What are the values of the the datafile for rows 1, 5, and 8 at columns 3, 7, and 10
+
+tgpp.data[c(1,5,8), c(3,7,10)]
+##   record_id easting  ph
+## 1       187  727000 6.9
+## 5       191  727000 6.9
+## 8       194  727000 6.9
+
+Create a pdf of the relationship between the variables "scale" and "richness". Scale is the area in square meters of the quadrat in which richness was recorded. Be sure to label your axes clearly, and choose a color you find pleasing for the points. To get a list of available stock colors use the function colors(). Also see this link: http://research.stowers-institute.org/efg/R/Color/Chart/index.htm.
+
+What happens to your plot when you set the plot argument log equal to 'xy'. plot(., log='xy')
+
+scale<-tgpp.data[ ,"scale"]
+
+plot(richness~scale, data=tgpp.data, xlab='scale', ylab='richness',col=4)
+ This looks awful.you can sort of see a trend as the scale increases in size, there is a resulting increase in the species richness found. However, the plot is so condensed because the code is converting the "scale" size into integers. Very hard to understand, and visually analyze data.
+
+plot(richness~scale, data=tgpp.data, xlab='scale', ylab='richness',log='xy',col=4)
+## Warning in xy.coords(x, y, xlabel, ylabel, log): 4 y values <= 0 omitted
+## from logarithmic plot
+
+
+So much better! Here it recognizes the scale as exponential now, we are able to see the small changes easily, and now we can visually see the range of species richness found for each value of scaled area. The trend is much easier to see, and we see that richness increases with an increase in the size of the scale. We see that the richness increases as we increase the amount/ scale of area sampled. We can also now visually see the variance of each sample area. Variance is the least at the scale with the greatest sampling 
+
