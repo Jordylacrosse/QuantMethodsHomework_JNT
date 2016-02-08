@@ -1,0 +1,300 @@
+---
+title: "Homework Feb. 5"
+output: pdf_document
+---
+
+## Univariate Assignment
+
+Read in tree data, metadata can be found in 
+`./data/tree_metadata.txt`
+
+
+1. Carry out an exploratory analysis using the tree dataset. For each species  
+address the following additional questions:
+
+  * how well does the exploratory model appear to explain cover?
+    * which explanatory variables are the most important?
+    * do model diagnostics indicate any problems with violations of
+      OLS assumptions?
+    * are you able to explain variance in one species better than another? 
+    
+```{r}
+library(car)
+trees = read.csv('http://dmcglinn.github.io/quant_methods/data/treedata_subset.csv')
+head(trees)
+levels(trees$species)
+
+#Subset Rubrum
+
+disturb<-as.factor(trees$disturb)
+rubrum<-trees[trees$species=="Acer rubrum",]
+rubrum
+R<-lm(cover~elev+disturb+tci+streamdist+beers, data=rubrum)
+
+
+summary(R)
+coefficients(R)
+plot(R)
+
+
+#aov
+
+Raov<- Anova(R, type=3)
+Raov
+summary(R)
+par(mfrow=c(2,2))
+plot(R)
+
+
+#Look at Rubrum Residuals
+
+
+Rubresid<-residuals(R)
+qqnorm(Rubresid)
+qqline(Rubresid)
+
+
+#Assessment of the Linear Model Assumptions
+library(gvlma)
+gvmodelR<- gvlma(R) 
+gvmodelR
+
+
+```
+  
+    
+Rubrum Analysis: 
+For the rubrum species, we can see that the model does an okay job to 
+explain cover, but we can do better- I say this because when we look at the 
+residuals (scale-location of fitted values to sqrt of standardized residuals), 
+we can see trends in our residuals, and in that case, our model has room for 
+improvement.. We can also look at our adjusted R squared value and it is
+extremely small, which can be improved with a better model. It currently explains
+only 3% of the variance.
+We can see that elevation, streamdist, beers, and the CORPLOG disturbance 
+(intercept) are important in determining cover. This model does a 
+pretty good job of explaining cover, because when we look at a qqplot of the 
+residuals, we can really see that there is not many outliars (and the outliars
+that we do have don't have much leverage at all-hardly any, actually..)
+The data are normally distributed and have equal levels of variance. 
+
+Out of all of the variables that account for rubrum cover area, it appears that 
+disturbance (excluding CORPLOG) and tci are the only factors that do not 
+affect the cover of Acer rubrum. 
+This makes sense, because if we know that a priori 
+that this tree is a generalist, it may be able to withstand a variety of
+disturbance types (so that disturbance has no effect). 
+So I feel that this does a pretty decent job at explaining cover, with the most 
+important variables being elevation, streamdist, beers. 
+
+Using the gvlma command, we can see what assumptions the model violates. For 
+rubrum, it violates skewness, kurtosis, and global stat. So the data are 
+extremely peaked comapred to a normal dist. and they is asymmetry in the 
+probability distribution. 
+
+
+```{r}
+#Subset Frasier
+
+fraseri<-trees[trees$species=="Abies fraseri",]
+fraseri
+F<-lm(cover~elev+disturb+tci+streamdist+beers, data=fraseri)
+
+
+summary(F)
+coefficients(F)
+plot(F)
+
+
+
+#aov
+
+disturb<-as.factor(trees$disturb)
+
+Faov<-Anova(F, type=3)
+Faov
+par(mfrow=c(2,2))
+plot(F)
+
+
+#Look at Frasier Residuals
+
+
+frasresid<-residuals(F)
+qqnorm(frasresid)
+qqline(frasresid)
+
+
+#Model Violations
+gvmodelF<- gvlma(F) 
+gvmodelF
+
+
+```
+
+
+Frasier Analysis: The variables that are the most important for frasier cover
+are the CORPLOG (intercept), and elevation (both of these also had an effect
+on the rubrum cover as well.), however the other variables had no significant
+effect on cover. 
+This model does a better job of fitting to the data than it did for rubrum,
+and we can see that this model violates fewer assumptions that it did for rubrum
+. Here, we can see that the only violation that this model does not follow
+is that for heteroscedasticity. Looking at the adjusted R squared, we can 
+see that this model also does a much better fitting the frasier data than it 
+did for the rubrum data, because now it explains about 50% of the data. 
+So this model specifically does a much better job of explaining the frasier 
+data set than the rubrum data set. 
+These data do not appear to be normally distributed, and there is more 
+variance is occurring here (there are more outliers in the qq plot.). However, 
+there are much fewer data points so these outliars have a bit more leverage
+on the qqline. When we look at the residuals vs. fitted, we can see
+heteroscedasticity. 
+
+
+
+#-----------------------------------------------------------------------------
+2. You may have noticed that the variable cover is defined as 
+positive integers between 1 and 10. and is therefore better treated
+as a discrete rather than continuous variable. 
+Re-examine your solutions to the question above but from the
+perspective of a General Linear Model (GLM) with a Poisson error term
+(rather than a Gaussian one as in OLS). 
+The Poisson distribution generates integers 0 to positive infinity
+so this may provide a good first approximation. 
+Your new model calls will look as follows:
+
+
+    ```{r}
+disturb<-as.factor(trees$disturb)
+
+R
+F
+
+summary(R)
+coefficients(R)
+plot(R)
+
+summary(F)
+coefficients(F)
+plot(F)
+
+
+acer_glm<-glm(cover~elev+disturb+tci+streamdist+beers, data=rubrum, family='poisson')
+fras_glm<-glm(cover~elev+disturb+tci+streamdist+beers, data=fraseri, family='poisson')
+
+    
+summary(acer_glm)    
+summary(fras_glm)
+
+    ```
+
+We can see that for rubrum, the same factors (CORPLOG, elev, streamdist, and 
+beers) for both models shows these affect the cover. This follows for the same
+as frasier.  We are able to explain variance much better in our frasier 
+species at 60% and only 4% of the variance in rubrum. These models are better 
+fits for both data sets because the glm models explain more variance than 
+linear models. 
+
+
+
+
+For assessing the degree of variation explained you can use a 
+pseudo-R-squared statistic (note this is just one of many possible)
+
+```{r}
+
+pseudo_r2 = function(glm_mod) {
+    1 -  glm_mod$deviance / glm_mod$null.deviance
+}
+
+pseudo_r2(acer_glm)
+#0.03997917
+pseudo_r2(fras_glm)
+#0.60931
+```
+
+0.6091592 (61%) variance explained for the frasier general linear model 
+compared to the 50% variance explained for the OLS model. This model improves
+the variance explained by 10% which rocks.
+
+
+However itonly explains 4% of the variance for the rubrum glm, which is hardly
+a difference from the multiple r^2 value we found in the OLS model of about
+3.5%..so it imporved it slightly but not by much to really  note.
+    
+   
+
+
+Compare the residual sums of squares between the traditional OLS 
+and glm models using `anova` (Note: not `Anova`) as such
+
+    ```{r}
+    anova(R, acer_glm)
+    
+    
+    anova(F, fras_glm)
+    
+    ```
+
+A small residual sums of squares indicates which model has a tighter/better
+fit to the data set. In both cases for both trees, the general linear model 
+fits much better, because these models have a significantly lower RSS value.
+
+
+
+
+Does it appear that changing the error distribution changed the
+results much? In what ways? 
+
+This accounts for the samples sizes in each of the groups and now in the 
+glm models the standard errors are now much smaller, which is more representativ
+e of the model overall,which results in a more reliable p-value we can trust. 
+Looking at the acer rubrum, in the linear model we can see that the tci
+shows an alpha at .07 which gives it some noise on how much variance it explains
+but when we adjust for the sample sizes , the glm model shows that the 
+alpha changes to .112.  
+
+
+
+3. Provide a plain English summary (i.e., no statistics) of what you have
+found and what conclusions we can take away from your analysis?
+
+
+We looked at 2 species of trees, rubrum and frasier, one being a specialist
+and the other being a generalist. We would expect different variables to 
+affect the distribution of these trees, so we wanted to look at different models
+to see which could explain the most variation. The easiest would be to look 
+at a linear model with multiple independent variables. This model did a pretty
+good job at explaining frasier, but not a good job for rubrum. Models that 
+do a good job explaining a majority of the variation can be considered a good
+model to follow. So we then wanted to look to see if there was a better model to
+follow. So we looked at a general linear model which allows for the 
+response variable to have an error distribution other than a normal distribution
+. The GLM generalizes linear regression by allowing the linear model to be 
+related to the response variable, which we can see by the amount of variation
+that each independent variable contributes. 
+From this analysis, we can see that the models are going to do a better job
+of explaining variation for the frasier trees, because these are a specialist 
+tree. Meaning that there is going to be a few factors that will prohibit its
+distribution, which we can see is elevation and a type of disturbance. We 
+see that either model, on the flip side, still does not do a good job of 
+explaining the variation of the data. However, this may arrise from the 
+problem of the data set. A priori we know that the rubrum tree is a generalist,
+so it is going to take a greater range of predictor variables to affect 
+cover. It appears that if more/ different predictor variables where used in the
+model, the model could have done a better job of explaining the cover of the 
+acer rubrum species. With that being said, the predictor variables that do 
+limit the cover of the rubrum tree might have not been included. But 
+we only know this post-analysis, so I would still trust the model because it 
+is able to explain 60% of the variation for the frasier fur. We can take away
+that for both trees, elevation and CORGPLOG have a good influence on the 
+cover. 
+To visualize the amount each variable influences cover, I would have probably
+ done a Tukey test, just to see the variation and influence (visually) each 
+variable had on cover.
+The poisson distribution is more applicable because the response variable 
+is considered to be categorical data, rather than continuous data. It is used
+to model the number of events occuring within a certain time, and 
+different predictor variables. Since our response is not continuous (which
+a lm would be better to use if so), the poisson dist is better to use.
